@@ -48,7 +48,6 @@
 #define MAX_RX_POLL_TIME 5
 #define UPPER_CUTOFF 50
 #define LOWER_CUTOFF 10
-
 #define IPA_DEFAULT_SYS_YELLOW_WM 32
 
 #define IPA_AGGR_BYTE_LIMIT (\
@@ -3747,6 +3746,7 @@ void ipa_rx_timeout_min_max_calc(u32 *min, u32 *max, s8 time)
 			UPPER_CUTOFF;
 	}
 	IPADBG("Rx polling timeout Min = %u len = %u\n", *min, *max);
+	IPADBG("END\n");
 }
 
 /**

@@ -1937,10 +1937,6 @@ const struct file_operations ipa2_active_clients = {
 	.write = ipa2_clear_active_clients_log,
 };
 
-const struct file_operations ipa_ipc_low_ops = {
-	.write = ipa_enable_ipc_low,
-};
-
 const struct file_operations ipa_rx_poll_time_ops = {
 	.read = ipa_read_rx_polling_timeout,
 	.write = ipa_write_rx_polling_timeout,
