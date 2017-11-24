@@ -1632,7 +1632,7 @@ struct subsys_device *subsys_register(struct subsys_desc *desc)
 			sizeof(subsys->desc->fw_name));
         /* add by yujialin for bug 58452, if somebody want to modify this code, 
         please conctact me */
-        if(0 == strncmp(WT_SUBSYSTEM_REASTART_LEVEL, "SYSTEM", 6)) {
+/*        if(0 == strncmp(WT_SUBSYSTEM_REASTART_LEVEL, "SYSTEM", 6)) {
                 printk("XXX::restartlevel system\r\n");//hoper
                 subsys->restart_level = RESET_SOC;//hoper
         }
@@ -1640,7 +1640,7 @@ struct subsys_device *subsys_register(struct subsys_desc *desc)
         if(0 == strncmp(WT_SUBSYSTEM_REASTART_LEVEL, "RELATED", 7)) {
                 printk("XXX::restartlevel related\r\n");//hoper
                 subsys->restart_level = RESET_SUBSYS_COUPLED;//hoper
-        }
+        }*/
 
 	subsys->notify = subsys_notif_add_subsys(desc->name);
 
