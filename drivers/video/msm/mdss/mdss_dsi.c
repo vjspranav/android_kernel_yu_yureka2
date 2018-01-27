@@ -45,6 +45,8 @@ static struct mdss_dsi_data *mdss_dsi_res;
 
 static struct pm_qos_request mdss_dsi_pm_qos_request;
 
+bool is_Lcm_Present = false;//heming@wingtech.com,20160301,disable lcm backlight when lcm is not connected
+
 static void mdss_dsi_pm_qos_add_request(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	struct irq_info *irq_info;
@@ -2821,12 +2823,13 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 					cfg_np_name, MDSS_MAX_PANEL_LEN);
 			}
 		}
-
+		is_Lcm_Present = true;
 		return dsi_pan_node;
 	}
 end:
 	if (strcmp(panel_name, NONE_PANEL))
 		dsi_pan_node = mdss_dsi_pref_prim_panel(pdev);
+        is_Lcm_Present = false;
 exit:
 	return dsi_pan_node;
 }

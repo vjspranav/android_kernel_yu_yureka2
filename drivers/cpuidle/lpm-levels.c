@@ -1391,7 +1391,7 @@ static int lpm_probe(struct platform_device *pdev)
 				__func__);
 		goto failed;
 	}
-	register_hotcpu_notifier(&lpm_cpu_nblk);
+	//register_hotcpu_notifier(&lpm_cpu_nblk);
 	module_kobj = kset_find_obj(module_kset, KBUILD_MODNAME);
 	if (!module_kobj) {
 		pr_err("%s: cannot find kobject for module %s\n",
@@ -1399,7 +1399,9 @@ static int lpm_probe(struct platform_device *pdev)
 		ret = -ENOENT;
 		goto failed;
 	}
-
+	
+	register_hotcpu_notifier(&lpm_cpu_nblk);//Bug159986 ,libin.wt, MODIFY,20160418,poweroff charging, waiting for rpm ack timeout and leads to crash,Case 02403014
+	
 	ret = create_cluster_lvl_nodes(lpm_root_node, module_kobj);
 	if (ret) {
 		pr_err("%s(): Failed to create cluster level nodes\n",
