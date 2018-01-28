@@ -15,7 +15,7 @@
 
 #include "wt89536/msm8953.dtsi"
 #include "msm8953-qrd-wt89536.dtsi"
-#include "wt89536/msm8953-audio-mtp.dtsi"
+#include "msm8953-audio-mtp.dtsi"
 
 / {
 	model = "Qualcomm Technologies, Inc. MSM8953 QRD WT89536";

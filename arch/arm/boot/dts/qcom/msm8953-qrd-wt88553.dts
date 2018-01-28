@@ -15,7 +15,7 @@
 
 #include "wt89536/msm8953.dtsi"
 #include "msm8953-qrd-wt88553.dtsi"
-#include "wt89536/msm8953-audio-mtp.dtsi"
+#include "msm8953-audio-mtp.dtsi"
 
 / {
 	model = "Qualcomm Technologies, Inc. MSMTITANIUM QRD WT88553";
