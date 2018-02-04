@@ -978,13 +978,10 @@ enum msm_isp_ioctl_cmd_code {
 #ifndef CONFIG_MACH_CMCC_MSM8953
 	MSM_ISP_CFG_HW_STATE,
 	MSM_ISP_AHB_CLK_CFG,
-<<<<<<< HEAD
 	MSM_ISP_UPDATE_FE_FRAME_ID,
 	MSM_ISP_RESTART_FE,
 	MSM_ISP32_REQUEST_STREAM,
-=======
 #endif
->>>>>>> f89187fd500... wt89536: merge markw camera drivers
 };
 
 #define VIDIOC_MSM_VFE_REG_CFG \
