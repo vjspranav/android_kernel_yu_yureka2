@@ -1020,12 +1020,4 @@ enum msm_isp_ioctl_cmd_code {
 	_IOWR('V', MSM_ISP_MAP_BUF_START_MULTI_PASS_FE, \
 		struct msm_vfe_fetch_eng_multi_pass_start)
 
-#ifndef CONFIG_MACH_CMCC_MSM8953
-#define VIDIOC_MSM_ISP_CFG_HW_STATE \
-	_IOWR('V', MSM_ISP_CFG_HW_STATE, \
-		struct msm_vfe_axi_stream_cfg_cmd)
-
-#define VIDIOC_MSM_ISP_AHB_CLK_CFG \
-	_IOWR('V', MSM_ISP_AHB_CLK_CFG, struct msm_isp_ahb_clk_cfg)
-#endif 
 #endif /* __MSMB_ISP__ */
