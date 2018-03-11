@@ -1603,14 +1603,7 @@ static int fg_mem_masked_write(struct fg_chip *chip, u16 addr,
 
 	return rc;
 }
-#if 0
-//bug 195513 modify cm-zhangmaosheng the battery levels jump 2016/7/27 start
-static int soc_to_setpoint(int soc)
-{
-	return DIV_ROUND_CLOSEST(soc * 255, 100);
-}
-//bug 195513 modify cm-zhangmaosheng the battery levels jump 2016/7/27 end
-#endif
+
 static void batt_to_setpoint_adc(int vbatt_mv, u8 *data)
 {
 	int val;
@@ -1805,10 +1798,6 @@ static int get_prop_capacity(struct fg_chip *chip)
 
 	if (chip->battery_missing)
 		return MISSING_CAPACITY;
-	#if 0  //Other_platform_modify 20160202 huangfusheng.wt cancel code compatible all type battery 
-	if (!chip->profile_loaded && !chip->use_otp_profile)
-		return DEFAULT_CAPACITY;
-	#endif
 	if (chip->charge_full)
 		return FULL_CAPACITY;
 	if (chip->soc_empty) {

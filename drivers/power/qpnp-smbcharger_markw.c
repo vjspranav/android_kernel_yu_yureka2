@@ -1337,8 +1337,8 @@ static const int usb_ilim_ma_table_8994[] = {
 	2100,
 	2300,
 	2400,
-	3000,
-	3500
+	2500,
+	3000
 };
 
 static const int usb_ilim_ma_table_8996[] = {
@@ -1372,8 +1372,8 @@ static const int usb_ilim_ma_table_8996[] = {
 	2600,
 	2700,
 	2800,
-	3000,
-	3500
+	2900,
+	3000
 };
 
 static int dc_ilim_ma_table_8994[] = {
@@ -3770,7 +3770,6 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 	int rc, current_limit = 0, soc;
 	enum power_supply_type usb_supply_type;
 	char *usb_type_name = "null";
-	int uv;
 
 	if (chip->bms_psy_name)
 		chip->bms_psy =
@@ -3802,25 +3801,7 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 				POWER_SUPPLY_PROP_CURRENT_MAX, &prop);
 	if (rc == 0)
 		current_limit = prop.intval / 1000;
-//+bug 192821 xuji.wt 20160715 modify charging scheme
-	uv = get_prop_batt_voltage_now(chip);
-	if(uv <= 4100000)
-	{
-		//chip->cfg_fastchg_current_ma  = 3500;
-		rc = vote(chip->fcc_votable, BATT_TYPE_FCC_VOTER, true,
-		3500);
-		if (rc < 0)
-		pr_err("Couldn't update USB PSY ICL vote rc=%d\n", rc);
-	}
-	else if(uv > 4100000)
-	{
-		//chip->cfg_fastchg_current_ma  = 3000;
-		rc = vote(chip->fcc_votable, BATT_TYPE_FCC_VOTER, true,
-		3000);
-		if (rc < 0)
-		pr_err("Couldn't update USB PSY ICL vote rc=%d\n", rc);
-	}
-//-bug 192821 xuji.wt 20160715 modify charging scheme
+
 	read_usb_type(chip, &usb_type_name, &usb_supply_type);
 
 	if (usb_supply_type != POWER_SUPPLY_TYPE_USB)
@@ -7492,7 +7473,7 @@ err:
 }
 
 #define DEFAULT_VLED_MAX_UV		3500000
-#define DEFAULT_FCC_MA			3500         //bug 192821 xuji.wt 20160715 modify charging scheme
+#define DEFAULT_FCC_MA			2000
 static int smb_parse_dt(struct smbchg_chip *chip)
 {
 	int rc = 0, ocp_thresh = -EINVAL;
@@ -8227,6 +8208,13 @@ static void rerun_hvdcp_det_if_necessary(struct smbchg_chip *chip)
 		if (rc < 0)
 			pr_err("Couldn't vote for 0 for suspend wa, going ahead rc=%d\n",
 					rc);
+		/* Schedule work for HVDCP detection */
+		if (!chip->hvdcp_not_supported) {
+			cancel_delayed_work_sync(&chip->hvdcp_det_work);
+			smbchg_stay_awake(chip, PM_DETECT_HVDCP);
+			schedule_delayed_work(&chip->hvdcp_det_work,
+					msecs_to_jiffies(HVDCP_NOTIFY_MS));
+		}
 	}
 }
 //bug 190290 cm-zhangmaosheng modify in the fastmmi the capacity more than 80 discharging 2016/08/30
@@ -8252,6 +8240,8 @@ static void charger_abnormal_detect_work(struct work_struct *work)
 		schedule_delayed_work(&chip->abnormal_detect,msecs_to_jiffies(20000));
 	}
 }
+//bug 190290 cm-zhangmaosheng modify in the fastmmi the capacity more than 80 discharging 2016/08/30
+
 //bug 190290 cm-zhangmaosheng modify in the fastmmi the capacity more than 80 discharging 2016/08/30
 static int smbchg_probe(struct spmi_device *spmi)
 {

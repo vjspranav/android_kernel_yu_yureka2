@@ -238,7 +238,6 @@ struct dwc3_msm {
 	struct notifier_block	dwc3_cpu_notifier;
 	struct notifier_block	usbdev_nb;
 	bool			hc_died;
-	bool			host_only_mode;
 
 	int  pwr_event_irq;
 	atomic_t                in_p3;
@@ -2074,8 +2073,6 @@ static int dwc3_msm_suspend(struct dwc3_msm *mdwc)
 		dev_dbg(mdwc->dev, "defer suspend with %d(msecs)\n",
 					mdwc->lpm_to_suspend_delay);
 		pm_wakeup_event(mdwc->dev, mdwc->lpm_to_suspend_delay);
-	} else {
-		pm_relax(mdwc->dev);
 	}
 
 	atomic_set(&dwc->in_lpm, 1);
@@ -2111,8 +2108,6 @@ static int dwc3_msm_resume(struct dwc3_msm *mdwc)
 		dev_dbg(mdwc->dev, "%s: Already resumed\n", __func__);
 		return 0;
 	}
-
-	pm_stay_awake(mdwc->dev);
 
 	/* Enable bus voting */
 	if (mdwc->bus_perf_client) {
@@ -2712,37 +2707,6 @@ static int dwc3_msm_get_clk_gdsc(struct dwc3_msm *mdwc)
 
 	return 0;
 }
-//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
-#if 0
-static int usb_oem_is_kpoc = 0;
-
-int into_charger_mode(struct dwc3_msm *mdwc)
-{
-	int ret;
-	char *cmdline_fastmmi=NULL;
-	char *temp;
-
-	cmdline_fastmmi = strstr(saved_command_line, "androidboot.mode=");
-	if(cmdline_fastmmi != NULL)
-	{
-		temp = cmdline_fastmmi + strlen("androidboot.mode=");
-		ret = strncmp(temp, "charger", strlen("charger"));
-		if(ret==0)
-		{
-			pr_err("into charger mode\n");
-			usb_oem_is_kpoc = 1;
-			return 1;/* charger mode*/
-		}else{
-			pr_err("others modes\n");
-			usb_oem_is_kpoc = 0;
-			return 2;/* Others mode*/
-		}
-	}
-	pr_err("has no androidboot.mode \n");
-	return 0;
-}
-#endif
-//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
 
 static int dwc3_msm_probe(struct platform_device *pdev)
 {
@@ -2791,14 +2755,7 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "error getting clock or gdsc.\n");
 		return ret;
 	}
-	//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
-	#if 0
-	ret = into_charger_mode(mdwc);
-	if(ret){
-		dev_err(&pdev->dev, " into usb power-off charging mode\n");
-	}
-	#endif
-	//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
+
 	mdwc->id_state = DWC3_ID_FLOAT;
 	set_bit(ID, &mdwc->inputs);
 
@@ -3099,7 +3056,6 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 		register_cpu_notifier(&mdwc->dwc3_cpu_notifier);
 
 	device_init_wakeup(mdwc->dev, 1);
-	pm_stay_awake(mdwc->dev);
 
 	if (of_property_read_bool(node, "qcom,disable-dev-mode-pm"))
 		pm_runtime_get_noresume(mdwc->dev);
@@ -3117,7 +3073,6 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 
 	if (!dwc->is_drd && host_mode) {
 		dev_dbg(&pdev->dev, "DWC3 in host only mode\n");
-		mdwc->host_only_mode = true;
 		mdwc->id_state = DWC3_ID_GROUND;
 		dwc3_ext_event_notify(mdwc);
 	}
@@ -3340,9 +3295,7 @@ static int dwc3_otg_start_host(struct dwc3_msm *mdwc, int on)
 		mdwc->in_host_mode = false;
 
 		/* re-init core and OTG registers as block reset clears these */
-		if (!mdwc->host_only_mode)
-			dwc3_post_host_reset_core_init(dwc);
-
+		dwc3_post_host_reset_core_init(dwc);
 		pm_runtime_mark_last_busy(mdwc->dev);
 		pm_runtime_put_sync_autosuspend(mdwc->dev);
 		dbg_event(0xFF, "StopHost psync",
@@ -3430,8 +3383,6 @@ skip_psy_type:
 
 	if (mdwc->chg_type == DWC3_CDP_CHARGER)
 		mA = DWC3_IDEV_CHG_MAX;
-	else
-		mA = DWC3_IDEV_SDP_CHG_MAX;
 
 	/* Save bc1.2 max_curr if type-c charger later moves to diff mode */
 	mdwc->bc1p2_current_max = mA;
@@ -3605,30 +3556,14 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 				dwc3_msm_gadget_vbus_draw(mdwc,
 						dcp_max_current);
 				atomic_set(&dwc->in_lpm, 1);
-				pm_relax(mdwc->dev);
 				break;
 			case DWC3_CDP_CHARGER:
 			case DWC3_SDP_CHARGER:
-			//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
-			#if 0
-			if (usb_oem_is_kpoc) {
-				 mdwc->chg_type = DWC3_SDP_CHARGER;
-				 mdwc->otg_state = OTG_STATE_B_IDLE;
-				 dwc3_msm_gadget_vbus_draw(mdwc,500);
-				 work = 0;
-				 atomic_set(&dwc->in_lpm, 1);
-				 pm_relax(mdwc->dev);
-				 pm_runtime_put_sync(mdwc->dev);
-				 break;
-			} else {//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
-			#endif
 				atomic_set(&dwc->in_lpm, 0);
 				pm_runtime_set_active(mdwc->dev);
 				pm_runtime_enable(mdwc->dev);
 				pm_runtime_get_noresume(mdwc->dev);
 				dwc3_initialize(mdwc);
-				dwc3_msm_gadget_vbus_draw(mdwc,
-						DWC3_IDEV_SDP_CHG_MAX);
 				/* check dp/dm for SDP & runtime_put if !SDP */
 				if (mdwc->detect_dpdm_floating) {
 					dwc3_check_float_lines(mdwc);
@@ -3640,7 +3575,6 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 				dbg_event(0xFF, "Undef SDP",
 					atomic_read(
 					&mdwc->dev->power.usage_count));
-			//}//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
 				break;
 			default:
 				WARN_ON(1);
@@ -3688,27 +3622,13 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 				 * OTG_STATE_B_PERIPHERAL state on cable
 				 * disconnect or in bus suspend.
 				 */
-			//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
-			#if 0
-			 if (usb_oem_is_kpoc) {
-				mdwc->chg_type = DWC3_SDP_CHARGER;
-				mdwc->otg_state = OTG_STATE_B_IDLE;
-				dwc3_msm_gadget_vbus_draw(mdwc,500);
-				work = 0;
-				atomic_set(&dwc->in_lpm, 1);
-				pm_relax(mdwc->dev);
-				pm_runtime_put_sync(mdwc->dev);
-				break;
-			 } else {//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
-			 #endif
-				 dwc3_msm_gadget_vbus_draw(mdwc,
-						500);
 				pm_runtime_get_sync(mdwc->dev);
 				dbg_event(0xFF, "CHG gsync",
 					atomic_read(
 						&mdwc->dev->power.usage_count));
 				/* check dp/dm for SDP & runtime_put if !SDP */
-				if (mdwc->detect_dpdm_floating) {
+				if (mdwc->detect_dpdm_floating &&
+				    mdwc->chg_type == DWC3_SDP_CHARGER) {
 					dwc3_check_float_lines(mdwc);
 					if (mdwc->chg_type != DWC3_SDP_CHARGER)
 						break;
@@ -3717,7 +3637,6 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 				mdwc->otg_state = OTG_STATE_B_PERIPHERAL;
 				work = 1;
 				break;
-			//}//bug 191156 modify cm-zhangmaosheng the usb power-off charging current 390mA
 			/* fall through */
 			default:
 				break;
