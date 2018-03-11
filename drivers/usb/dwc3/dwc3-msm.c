@@ -3630,8 +3630,7 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 				dwc3_msm_gadget_vbus_draw(mdwc,
 						DWC3_IDEV_SDP_CHG_MAX);
 				/* check dp/dm for SDP & runtime_put if !SDP */
-				if (mdwc->detect_dpdm_floating &&
-					mdwc->chg_type == DWC3_SDP_CHARGER) {
+				if (mdwc->detect_dpdm_floating) {
 					dwc3_check_float_lines(mdwc);
 					if (mdwc->chg_type != DWC3_SDP_CHARGER)
 						break;
